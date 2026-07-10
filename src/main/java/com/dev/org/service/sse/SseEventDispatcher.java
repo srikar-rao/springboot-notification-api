@@ -29,6 +29,32 @@ public class SseEventDispatcher {
         scheduler.shutdownNow();
     }
 
+    public void startHeartbeat(Set<SseEmitter> emitters) {
+        scheduler.scheduleAtFixedRate(
+                () -> {
+                    if (emitters == null || emitters.isEmpty()) {
+                        return;
+                    }
+                    for (SseEmitter emitter : emitters) {
+                        executor.submit(
+                                () -> {
+                                    try {
+                                        emitter.send(
+                                                SseEmitter.event().name("ping").data("keep-alive"));
+                                    } catch (IOException e) {
+                                        log.debug(
+                                                "Dead connection detected during heartbeat,"
+                                                        + " removing.");
+                                        emitter.complete();
+                                    }
+                                });
+                    }
+                },
+                15,
+                30,
+                TimeUnit.SECONDS);
+    }
+
     public void dispatchRefresh(Set<SseEmitter> emitters) {
         if (emitters == null || emitters.isEmpty()) {
             return;

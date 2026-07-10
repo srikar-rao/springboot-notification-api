@@ -6,6 +6,7 @@ import com.dev.org.model.NotificationResponse;
 import com.dev.org.service.sse.SseEmitterRegistry;
 import com.dev.org.service.sse.SseEventDispatcher;
 import com.dev.org.service.sse.strategy.SseRoutingStrategy;
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,12 @@ public class SseConnectionManager {
     private final SseEmitterRegistry registry;
     private final SseEventDispatcher dispatcher;
     private final List<SseRoutingStrategy> routingStrategies;
+
+    @PostConstruct
+    public void init() {
+        // Start periodic heartbeat to detect and clean up dropped client connections
+        dispatcher.startHeartbeat(registry.getGlobalEmitters());
+    }
 
     public SseEmitter subscribe(User user) {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
