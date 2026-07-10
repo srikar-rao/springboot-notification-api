@@ -1,0 +1,150 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.7'
+	id 'io.spring.dependency-management' version '1.1.7'
+
+	// Code quality plugins
+	id 'com.diffplug.spotless' version '6.25.0'
+	id 'checkstyle'
+	id 'pmd'
+
+	// OpenAPI Generator plugin
+	id 'org.openapi.generator' version '7.4.0'
+}
+
+group = 'com.dev.org'
+version = '0.0.1-SNAPSHOT'
+description = 'Springboot Production Grade Project Template'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// Production-grade dependencies
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
+
+	// OpenAPI (Swagger) Documentation
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14'
+
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'org.postgresql:postgresql'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test', Test) {
+	useJUnitPlatform()
+}
+
+// ===== CODE QUALITY CONFIGURATION =====
+
+sourceSets {
+	main {
+		java {
+			srcDir "$buildDir/generated/openapi/src/main/java"
+		}
+	}
+}
+
+// Make Java compilation depend on OpenAPI generation
+compileJava.dependsOn tasks.named('openApiGenerate')
+
+// Spotless formatting rule - exclude generated files
+spotless {
+  encoding 'UTF-8'
+	java {
+		targetExclude 'build/generated/openapi/**'
+		googleJavaFormat('1.19.1').aosp().reflowLongStrings().formatJavadoc(false)
+		removeUnusedImports()
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+}
+
+// Checkstyle - Google Java Style + Custom Rules
+checkstyle {
+	toolVersion = '10.14.2'
+	configFile = file("config/checkstyle/checkstyle.xml")
+	maxErrors = 0
+	maxWarnings = 0
+	ignoreFailures = false
+}
+
+checkstyleMain {
+	source = fileTree('src/main/java')
+}
+
+// PMD - Custom Rulesets
+pmd {
+	toolVersion = '7.0.0'
+	consoleOutput = true
+	ruleSetFiles = files("config/pmd/pmd-rules.xml")
+	ruleSets = []
+	ignoreFailures = false
+}
+
+// Make build fail on code quality violations
+check.dependsOn spotlessCheck
+build.dependsOn check
+
+// OpenAPI Generator Configuration - Server
+openApiGenerate {
+	generatorName.set("spring")
+	inputSpec.set("$rootDir/src/main/resources/openapi/open-api-swagger.yaml")
+	outputDir.set("$buildDir/generated/openapi")
+	apiPackage.set("com.dev.org.controller.api")
+	modelPackage.set("com.dev.org.model")
+	configOptions.set([
+			useSpringBoot3: "true",
+			interfaceOnly: "true",
+			skipDefaultInterface: "true",
+			useTags: "true",
+			generateSupportingFiles: "false",
+			openApiNullable: "false"
+	])
+}
+
+// OpenAPI Generator Configuration - Integration Models
+tasks.register('openApiGenerateIntegration', org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+	generatorName.set("spring")
+	inputSpec.set("$rootDir/src/main/resources/openapi/open-api-integration.yaml")
+	outputDir.set("$buildDir/generated/openapi")
+	modelPackage.set("com.dev.org.integration")
+	globalProperties.set([apis: "none", models: ""])
+	configOptions.set([
+			useSpringBoot3: "true",
+			generateSupportingFiles: "false",
+			openApiNullable: "false"
+	])
+}
+
+compileJava.dependsOn tasks.named('openApiGenerateIntegration')
+
+// Disable PMD tasks (enable when project-specific rules are finalized)
+tasks.withType(Pmd).configureEach {
+	enabled = false
+}

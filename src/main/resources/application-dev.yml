@@ -1,0 +1,41 @@
+spring:
+  # ===== DATASOURCE CONFIGURATION (PostgreSQL - Development) =====
+  datasource:
+    url: jdbc:postgresql://localhost:5432/springboot_dev
+    username: dev_user
+    password: dev_password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      leak-detection-threshold: 30000
+
+  # ===== JPA/HIBERNATE CONFIGURATION =====
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+  # ===== FLYWAY CONFIGURATION =====
+  flyway:
+    enabled: true
+
+# ===== MANAGEMENT/ACTUATOR CONFIGURATION =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# ===== LOGGING CONFIGURATION =====
+logging:
+  level:
+    root: INFO
+    com.dev.org: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG

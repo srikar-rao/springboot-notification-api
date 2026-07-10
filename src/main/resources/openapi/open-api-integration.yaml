@@ -1,0 +1,27 @@
+# AI_INSTRUCTION:
+# When modifying this file, use compact flow-style YAML to declare schemas and simple arrays.
+# - Use inline arrays for required fields and tags: `required: [field1, field2]`
+# - Use inline objects for simple properties: `propertyName: {type: string, format: int64, nullable: true}`
+# - Use inline objects for nested single-item schemas: `schema: {type: array, items: {$ref: '...'}}`
+# - Keep the file readable but minimize unnecessary vertical lines.
+# This file is dedicated to external API request and response models (Integration Layer).
+
+openapi: 3.0.3
+info:
+  title: Integration API Models
+  version: 1.0.0
+  description: Contract-First API specification for external integration models
+
+paths: {} # Models only, no controller APIs generated
+
+components:
+  schemas:
+    TodoIntegrationResponse:
+      type: object
+      description: DTO for external Todo response from JSONPlaceholder
+      required: [id, userId, title, completed]
+      properties:
+        id: {type: integer, format: int64, example: 1}
+        userId: {type: integer, format: int64, example: 101}
+        title: {type: string, example: "Buy groceries"}
+        completed: {type: boolean, example: false}

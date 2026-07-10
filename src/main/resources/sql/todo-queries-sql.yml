@@ -1,0 +1,2 @@
+get-all-todos: |-
+  SELECT * FROM todos

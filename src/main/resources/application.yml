@@ -1,0 +1,122 @@
+spring:
+  application:
+    name: springboot-prod-template
+
+  # Virtual threads (Java 21+)
+  threads:
+    virtual:
+      enabled: true
+
+  # ===== DATASOURCE CONFIGURATION (Common Settings) =====
+  # Database-specific config overridden in profile-specific files
+  datasource:
+    hikari:
+      idle-timeout: 30000  # 30 sec idle timeout
+      max-lifetime: 1800000  # 30 min max lifetime
+      connection-timeout: 20000  # 20 sec connection wait
+      validation-timeout: 5000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect  # Default to PostgreSQL
+    open-in-view: false  # Disable Open Session in View (cleaner architecture)
+    hibernate:
+      ddl-auto: none  # Strict: validate schema, don't auto-modify
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+          fetch_size: 50
+        order_inserts: true
+        order_updates: true
+        batch_size: 1000  # Enable batching for bulk operations
+        generate_statistics: false
+        use_query_cache: false
+        use_second_level_cache: false
+        enable_lazy_load_no_trans: false
+        connection:
+          autocommit: false
+
+  # ===== JACKSON CONFIGURATION =====
+  jackson:
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false
+
+  # ===== FLYWAY CONFIGURATION =====
+  # Enable in dev/qa/prod profiles, disable in local
+  flyway:
+    enabled: false
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+# ===== SERVER CONFIGURATION =====
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# ===== MANAGEMENT/ACTUATOR CONFIGURATION =====
+management:
+  server:
+    port: 8080
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+    enable:
+      http: true
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 1.0
+  # Uncomment for distributed tracing
+  # zipkin:
+  #   tracing:
+  #     endpoint: http://localhost:9411/api/v2/spans
+
+# ===== OPENAPI/SWAGGER CONFIGURATION =====
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /docs
+    enabled: true
+  info:
+    title: Spring Boot Production Template API
+    description: A production-ready Spring Boot application template with best practices
+    version: '@project.version@'
+    contact:
+      name: API Support
+      email: support@example.com
+
+# ===== APPLICATION-SPECIFIC CONFIGURATION =====
+app:
+  cors:
+    allowed-origins: "*"
+
+# ===== LOGGING CONFIGURATION (Base Settings) =====
+# Profile-specific logging levels defined in application-{profile}.yml
+# Logback config in logback-spring.xml handles appenders and formats
+logging:
+  level:
+    root: WARN

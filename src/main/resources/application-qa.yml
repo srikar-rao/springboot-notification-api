@@ -1,0 +1,49 @@
+spring:
+  # ===== DATASOURCE CONFIGURATION (PostgreSQL - QA) =====
+  datasource:
+    url: jdbc:postgresql://qa-db-server:5432/springboot_qa
+    username: qa_user
+    password: qa_secure_password_change_me
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 3
+
+  # ===== JPA/HIBERNATE CONFIGURATION =====
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  # ===== FLYWAY CONFIGURATION =====
+  flyway:
+    enabled: true
+
+# ===== SERVER CONFIGURATION =====
+server:
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
+# ===== MANAGEMENT/ACTUATOR CONFIGURATION =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  tracing:
+    sampling:
+      probability: 0.5
+
+# ===== LOGGING CONFIGURATION =====
+logging:
+  level:
+    root: INFO
+    com.dev.org: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+  file:
+    max-size: 100MB
+    max-history: 30
