@@ -7,40 +7,41 @@ import com.dev.org.domain.NotificationStatus;
 import com.dev.org.domain.User;
 import com.dev.org.repository.NotificationAudienceRepository;
 import com.dev.org.repository.NotificationRepository;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class TargetedNotificationStrategy implements NotificationStrategy {
+public class RoleFindNotificationStrategy implements FindNotificationStrategy {
 
     private final NotificationRepository notificationRepository;
     private final NotificationAudienceRepository audienceRepository;
 
+    private final ObjectProvider<RoleFindNotificationStrategy> selfProvider;
+
     @Override
     public boolean supports(AudienceType audienceType) {
-        return AudienceType.USER == audienceType || AudienceType.ROLE == audienceType;
+        return AudienceType.ROLE == audienceType;
     }
 
     @Override
-    @Cacheable(value = "notifications", key = "#user.id")
     public List<Notification> getActiveNotifications(User user) {
-        if (user == null || user.getId() == null) {
+        if (user == null || user.getRoles() == null || user.getRoles().isEmpty()) {
             return List.of();
         }
 
-        Set<String> targetIds = new HashSet<>();
-        targetIds.add(user.getId());
-        if (user.getRoles() != null) {
-            targetIds.addAll(user.getRoles());
-        }
+        return user.getRoles().stream()
+                .flatMap(role -> selfProvider.getObject().getActiveNotificationsForRole(role).stream())
+                .toList();
+    }
 
+    @Cacheable(value = "notifications", key = "'ROLE_' + #role")
+    public List<Notification> getActiveNotificationsForRole(String role) {
         List<String> notificationIds =
-                audienceRepository.findByTargetsIn(targetIds).stream()
+                audienceRepository.findByTargetsContaining(role).stream()
                         .map(NotificationAudience::getNotificationId)
                         .toList();
 

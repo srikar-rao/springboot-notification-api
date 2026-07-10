@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class GlobalNotificationStrategy implements NotificationStrategy {
+public class GlobalFindNotificationStrategy implements FindNotificationStrategy {
 
     private final NotificationRepository notificationRepository;
 

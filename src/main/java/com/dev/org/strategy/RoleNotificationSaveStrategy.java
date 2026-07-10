@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class TargetedNotificationSaveStrategy implements NotificationSaveStrategy {
+public class RoleNotificationSaveStrategy implements NotificationSaveStrategy {
 
     private final NotificationRepository notificationRepository;
     private final NotificationAudienceRepository audienceRepository;
@@ -21,7 +21,7 @@ public class TargetedNotificationSaveStrategy implements NotificationSaveStrateg
 
     @Override
     public boolean supports(AudienceType audienceType) {
-        return AudienceType.USER == audienceType || AudienceType.ROLE == audienceType;
+        return AudienceType.ROLE == audienceType;
     }
 
     @Override
@@ -36,14 +36,8 @@ public class TargetedNotificationSaveStrategy implements NotificationSaveStrateg
         audienceRepository.save(audience);
 
         Cache cache = cacheManager.getCache("notifications");
-        if (cache != null) {
-            if (notification.getAudienceType() == AudienceType.USER) {
-                if (targets != null) {
-                    targets.forEach(cache::evict);
-                }
-            } else {
-                cache.clear();
-            }
+        if (cache != null && targets != null) {
+            targets.forEach(target -> cache.evict("ROLE_" + target));
         }
 
         return saved;
