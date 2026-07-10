@@ -34,7 +34,12 @@ public class RoleFindNotificationStrategy implements FindNotificationStrategy {
         }
 
         return user.getRoles().stream()
-                .flatMap(role -> selfProvider.getObject().getActiveNotificationsForRole(role).stream())
+                .flatMap(
+                        role ->
+                                selfProvider
+                                        .getObject()
+                                        .getActiveNotificationsForRole(role)
+                                        .stream())
                 .toList();
     }
 
