@@ -1,4 +1,4 @@
-package com.dev.org.service.sse.strategy;
+package com.dev.org.strategy;
 
 import com.dev.org.domain.AudienceType;
 import java.util.Set;

@@ -1,4 +1,4 @@
-package com.dev.org.service.sse;
+package com.dev.org.service;
 
 import jakarta.annotation.PreDestroy;
 import java.io.IOException;

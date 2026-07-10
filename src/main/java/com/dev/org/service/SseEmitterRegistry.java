@@ -1,4 +1,4 @@
-package com.dev.org.service.sse;
+package com.dev.org.service;
 
 import com.dev.org.domain.User;
 import java.util.Set;

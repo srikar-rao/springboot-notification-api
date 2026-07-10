@@ -1,9 +1,11 @@
-package com.dev.org.service.sse.strategy;
+package com.dev.org.strategy;
 
 import com.dev.org.domain.AudienceType;
-import com.dev.org.service.sse.SseEmitterRegistry;
+
 import java.util.HashSet;
 import java.util.Set;
+
+import com.dev.org.service.SseEmitterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
