@@ -9,29 +9,28 @@ openapi: 3.0.3
 info:
   title: Api Server
   version: 1.0.0
-  description: Contract-First API specification for managing todos
+  description: API Server
 
 paths:
-  /todos:
+  /notifications:
     get:
-      tags: [Todos]
-      summary: Get all todos
-      operationId: getAllTodos
+      tags: [Notifications]
+      summary: Get all notifications
+      operationId: findAllNotifications
       responses:
         '200':
-          description: A list of todos
+          description: A list of notifications
           content:
             application/json:
-              schema: {type: array, items: {$ref: '#/components/schemas/TodoResponse'}}
+              schema: {type: array, items: {$ref: '#/components/schemas/NotificationResponse'}}
 
 components:
   schemas:
-    TodoResponse:
+    NotificationResponse:
       type: object
-      description: DTO for Todo response
-      required: [id, userId, title, completed]
+      description: DTO for Notification response
+      required: [id, message, readStatus]
       properties:
-        id: {type: integer, format: int64, example: 1}
-        userId: {type: integer, format: int64, example: 101}
-        title: {type: string, example: "Buy groceries"}
-        completed: {type: boolean, example: false}
+        id: {type: string, example: "60d5ec49f1b2c8671cc8a3f1"}
+        message: {type: string, example: "You have a new alert"}
+        readStatus: {type: boolean, example: false}
