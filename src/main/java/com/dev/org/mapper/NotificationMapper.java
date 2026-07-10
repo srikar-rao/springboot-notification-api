@@ -39,6 +39,11 @@ public class NotificationMapper {
     }
 
     public NotificationResponse toResponse(Notification notification) {
+        return toResponse(notification, null);
+    }
+
+    public NotificationResponse toResponse(
+            Notification notification, com.dev.org.domain.UserNotificationState state) {
         if (notification == null) {
             return null;
         }
@@ -83,6 +88,16 @@ public class NotificationMapper {
         if (notification.getUpdatedAt() != null) {
             response.setUpdatedAt(
                     OffsetDateTime.ofInstant(notification.getUpdatedAt(), ZoneOffset.UTC));
+        }
+
+        if (state != null) {
+            if (state.getReadAt() != null) {
+                response.setReadAt(OffsetDateTime.ofInstant(state.getReadAt(), ZoneOffset.UTC));
+            }
+            if (state.getDismissedAt() != null) {
+                response.setDismissedAt(
+                        OffsetDateTime.ofInstant(state.getDismissedAt(), ZoneOffset.UTC));
+            }
         }
 
         return response;

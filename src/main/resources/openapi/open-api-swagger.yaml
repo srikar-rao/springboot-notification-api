@@ -88,3 +88,5 @@ components:
         expiresAt: {type: string, format: date-time}
         createdAt: {type: string, format: date-time}
         updatedAt: {type: string, format: date-time}
+        readAt: {type: string, format: date-time}
+        dismissedAt: {type: string, format: date-time}

@@ -363,6 +363,35 @@
 
         // Load notifications on page load
         loadNotifications();
+
+        // Setup SSE connection
+        function setupSSE() {
+            const eventSource = new EventSource(`${API_BASE}/notifications/stream?userId=${MOCK_USER_ID}&roles=${MOCK_USER_ROLES.join(',')}`);
+
+            eventSource.addEventListener('connected', function(e) {
+                console.log('SSE Connected:', e.data);
+            });
+
+            eventSource.addEventListener('refresh', function(e) {
+                console.log('Refresh signal received via SSE:', e.data);
+
+                // Show a toast or update message
+                showMessage('New notification available! Refreshing...', 'success');
+
+                // Reload the grid to fetch the latest view and states
+                loadNotifications();
+            });
+
+            eventSource.onerror = function(err) {
+                console.error('SSE connection error:', err);
+                eventSource.close();
+                // Try to reconnect after 5 seconds
+                setTimeout(setupSSE, 5000);
+            };
+        }
+
+        // Start SSE
+        setupSSE();
     </script>
 </body>
 </html>
