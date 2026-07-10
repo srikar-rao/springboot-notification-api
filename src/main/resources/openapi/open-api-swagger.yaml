@@ -13,24 +13,78 @@ info:
 
 paths:
   /notifications:
-    get:
+    post:
       tags: [Notifications]
-      summary: Get all notifications
-      operationId: findAllNotifications
+      summary: Create a notification
+      operationId: createNotification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateNotificationRequest'}
       responses:
-        '200':
-          description: A list of notifications
+        '201':
+          description: Notification created
           content:
             application/json:
-              schema: {type: array, items: {$ref: '#/components/schemas/NotificationResponse'}}
+              schema: {$ref: '#/components/schemas/NotificationResponse'}
+    get:
+      tags: [Notifications]
+      summary: Get notifications for a user
+      operationId: getNotifications
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: roles
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          explode: true
+      responses:
+        '200':
+          description: A list of notifications for the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/NotificationResponse'}
 
 components:
   schemas:
+    CreateNotificationRequest:
+      type: object
+      required: [title, message, priority, audienceType]
+      properties:
+        title: {type: string, example: "System Update"}
+        message: {type: string, example: "System will be down for maintenance"}
+        actionUrl: {type: string, example: "https://example.com/maintenance"}
+        type: {type: string, example: "SYSTEM"}
+        priority: {type: string, enum: [LOW, NORMAL, HIGH, CRITICAL], example: "HIGH"}
+        audienceType: {type: string, enum: [USER, ROLE, GLOBAL], example: "GLOBAL"}
+        severity: {type: string, enum: [INFO, FAILURE, SUCCESS], default: "INFO", example: "INFO"}
+        targets: {type: array, items: {type: string}, description: "User or Role identifiers. Null/empty for GLOBAL."}
+
     NotificationResponse:
       type: object
       description: DTO for Notification response
-      required: [id, message, readStatus]
+      required: [id, title, message, priority, audienceType, status]
       properties:
         id: {type: string, example: "60d5ec49f1b2c8671cc8a3f1"}
-        message: {type: string, example: "You have a new alert"}
-        readStatus: {type: boolean, example: false}
+        title: {type: string, example: "System Update"}
+        message: {type: string, example: "System will be down for maintenance"}
+        actionUrl: {type: string, example: "https://example.com"}
+        type: {type: string, example: "SYSTEM"}
+        priority: {type: string, enum: [LOW, NORMAL, HIGH, CRITICAL]}
+        audienceType: {type: string, enum: [USER, ROLE, GLOBAL]}
+        severity: {type: string, enum: [INFO, FAILURE, SUCCESS]}
+        status: {type: string, enum: [DRAFT, ACTIVE, EXPIRED, CANCELLED]}
+        publishedAt: {type: string, format: date-time}
+        expiresAt: {type: string, format: date-time}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}

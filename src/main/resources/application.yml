@@ -10,7 +10,7 @@ spring:
   # ===== MONGODB CONFIGURATION =====
   data:
     mongodb:
-      uri: mongodb://localhost:27017/notifications
+      uri: mongodb://admin:admin123@localhost:27017/merchhub?authSource=admin
 
   # ===== JACKSON CONFIGURATION =====
   jackson:
