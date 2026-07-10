@@ -2,12 +2,12 @@ package com.dev.org.strategy;
 
 import com.dev.org.domain.AudienceType;
 import com.dev.org.domain.Notification;
+import com.dev.org.domain.User;
 import java.util.List;
-import java.util.Set;
 
 public interface NotificationStrategy {
 
-    AudienceType getAudienceType();
+    boolean supports(AudienceType audienceType);
 
-    List<Notification> getActiveNotifications(Set<String> targets);
+    List<Notification> getActiveNotifications(User user);
 }

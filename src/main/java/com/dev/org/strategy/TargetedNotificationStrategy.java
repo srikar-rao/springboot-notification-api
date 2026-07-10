@@ -1,26 +1,46 @@
 package com.dev.org.strategy;
 
+import com.dev.org.domain.AudienceType;
 import com.dev.org.domain.Notification;
 import com.dev.org.domain.NotificationAudience;
 import com.dev.org.domain.NotificationStatus;
+import com.dev.org.domain.User;
 import com.dev.org.repository.NotificationAudienceRepository;
 import com.dev.org.repository.NotificationRepository;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class TargetedNotificationStrategy {
+public class TargetedNotificationStrategy implements NotificationStrategy {
 
     private final NotificationRepository notificationRepository;
     private final NotificationAudienceRepository audienceRepository;
 
-    @Cacheable(value = "notifications", key = "#target")
-    public List<Notification> getActiveNotificationsForTarget(String target) {
+    @Override
+    public boolean supports(AudienceType audienceType) {
+        return AudienceType.USER == audienceType || AudienceType.ROLE == audienceType;
+    }
+
+    @Override
+    @Cacheable(value = "notifications", key = "#user.id")
+    public List<Notification> getActiveNotifications(User user) {
+        if (user == null || user.getId() == null) {
+            return List.of();
+        }
+
+        Set<String> targetIds = new HashSet<>();
+        targetIds.add(user.getId());
+        if (user.getRoles() != null) {
+            targetIds.addAll(user.getRoles());
+        }
+
         List<String> notificationIds =
-                audienceRepository.findByTargetsContaining(target).stream()
+                audienceRepository.findByTargetsIn(targetIds).stream()
                         .map(NotificationAudience::getNotificationId)
                         .toList();
 

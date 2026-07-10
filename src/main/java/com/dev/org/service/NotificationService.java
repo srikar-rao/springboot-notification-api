@@ -4,16 +4,15 @@ import com.dev.org.domain.AudienceType;
 import com.dev.org.domain.Notification;
 import com.dev.org.domain.NotificationAudience;
 import com.dev.org.domain.NotificationStatus;
+import com.dev.org.domain.User;
 import com.dev.org.mapper.NotificationMapper;
 import com.dev.org.model.CreateNotificationRequest;
 import com.dev.org.model.NotificationResponse;
 import com.dev.org.repository.NotificationAudienceRepository;
 import com.dev.org.repository.NotificationRepository;
-import com.dev.org.strategy.GlobalNotificationStrategy;
-import com.dev.org.strategy.TargetedNotificationStrategy;
+import com.dev.org.strategy.NotificationStrategy;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,8 +28,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationAudienceRepository audienceRepository;
     private final NotificationMapper notificationMapper;
-    private final GlobalNotificationStrategy globalStrategy;
-    private final TargetedNotificationStrategy targetedStrategy;
+    private final List<NotificationStrategy> notificationStrategies;
     private final CacheManager cacheManager;
 
     public NotificationResponse createNotification(CreateNotificationRequest request) {
@@ -75,21 +73,10 @@ public class NotificationService {
 
     public List<NotificationResponse> getNotifications(String userId, Set<String> roles) {
         Set<String> safeRoles = roles == null ? new HashSet<>() : roles;
-        Set<String> targetIds = new HashSet<>(safeRoles);
-        targetIds.add(userId);
+        User user = User.builder().id(userId).roles(safeRoles).build();
 
-        List<Notification> activeNotifications = new ArrayList<>();
-
-        // GLOBAL (Uses cached strategy)
-        activeNotifications.addAll(globalStrategy.getActiveNotifications(null));
-
-        // TARGETS (Uses cached strategy)
-        for (String target : targetIds) {
-            activeNotifications.addAll(targetedStrategy.getActiveNotificationsForTarget(target));
-        }
-
-        return activeNotifications.stream()
-                // Ensure no duplicates if a notification hit multiple targets
+        return notificationStrategies.stream()
+                .flatMap(strategy -> strategy.getActiveNotifications(user).stream())
                 .distinct()
                 .map(notificationMapper::toResponse)
                 .toList();
