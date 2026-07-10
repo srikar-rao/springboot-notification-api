@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -29,7 +30,7 @@ public class ExceptionHandler {
      * Handles custom unchecked ApplicationException.
      */
     @org.springframework.web.bind.annotation.ExceptionHandler(ApplicationException.class)
-    public ProblemDetail handleApplicationException(
+    public ResponseEntity<ProblemDetail> handleApplicationException(
             ApplicationException ex, HttpServletRequest request) {
         var problemDetail = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problemDetail.setDetail(ex.getMessage());
@@ -38,14 +39,16 @@ public class ExceptionHandler {
         problemDetail.setProperty("path", request.getRequestURI());
 
         log.error("Application exception", ex);
-        return problemDetail;
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .body(problemDetail);
     }
 
     /**
      * Handles Spring's @Valid validation failures (400 Bad Request).
      */
     @org.springframework.web.bind.annotation.ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail handleValidationException(
+    public ResponseEntity<ProblemDetail> handleValidationException(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult()
@@ -66,7 +69,9 @@ public class ExceptionHandler {
 
         log.error("Validation failed");
 
-        return problemDetail;
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .body(problemDetail);
     }
 
     /**
@@ -74,7 +79,7 @@ public class ExceptionHandler {
      */
     @org.springframework.web.bind.annotation.ExceptionHandler(
             MethodArgumentTypeMismatchException.class)
-    public ProblemDetail handleTypeMismatch(
+    public ResponseEntity<ProblemDetail> handleTypeMismatch(
             MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
         Class<?> requiredType = ex.getRequiredType();
         String expectedType = requiredType != null ? requiredType.getSimpleName() : "unknown";
@@ -91,14 +96,17 @@ public class ExceptionHandler {
 
         log.error("Type mismatch");
 
-        return problemDetail;
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .body(problemDetail);
     }
 
     /**
      * Handles all other uncaught exceptions (500 Internal Server Error).
      */
     @org.springframework.web.bind.annotation.ExceptionHandler(Exception.class)
-    public ProblemDetail handleGenericException(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ProblemDetail> handleGenericException(
+            Exception ex, HttpServletRequest request) {
         var problemDetail = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problemDetail.setDetail("An unexpected error occurred. Please try again later.");
 
@@ -107,6 +115,8 @@ public class ExceptionHandler {
 
         log.error("Unhandled exception", ex);
 
-        return problemDetail;
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .body(problemDetail);
     }
 }
