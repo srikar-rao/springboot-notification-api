@@ -3,6 +3,7 @@ package com.dev.org.service;
 import com.dev.org.domain.AudienceType;
 import com.dev.org.domain.User;
 import com.dev.org.model.NotificationResponse;
+import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,6 +11,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -24,10 +28,21 @@ public class SseConnectionManager {
     // Use Virtual Threads for sending events concurrently without exhausting thread pools
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
+    // Scheduler for debouncing notifications (runs the timer only)
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
     // Data structures for routing
     private final ConcurrentMap<String, Set<SseEmitter>> userEmitters = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Set<SseEmitter>> roleEmitters = new ConcurrentHashMap<>();
     private final Set<SseEmitter> globalEmitters = new CopyOnWriteArraySet<>();
+    private final ConcurrentMap<SseEmitter, ScheduledFuture<?>> pendingRefreshes =
+            new ConcurrentHashMap<>();
+
+    @PreDestroy
+    public void shutdown() {
+        executor.shutdownNow();
+        scheduler.shutdownNow();
+    }
 
     public SseEmitter subscribe(User user) {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
@@ -86,14 +101,14 @@ public class SseConnectionManager {
 
                     switch (type) {
                         case GLOBAL:
-                            sendToEmitters(globalEmitters, notification);
+                            scheduleRefresh(globalEmitters);
                             break;
                         case USER:
                             if (targets != null) {
                                 for (String userId : targets) {
                                     Set<SseEmitter> emitters = userEmitters.get(userId);
                                     if (emitters != null) {
-                                        sendToEmitters(emitters, notification);
+                                        scheduleRefresh(emitters);
                                     }
                                 }
                             }
@@ -103,7 +118,7 @@ public class SseConnectionManager {
                                 for (String role : targets) {
                                     Set<SseEmitter> emitters = roleEmitters.get(role);
                                     if (emitters != null) {
-                                        sendToEmitters(emitters, notification);
+                                        scheduleRefresh(emitters);
                                     }
                                 }
                             }
@@ -115,24 +130,54 @@ public class SseConnectionManager {
                 });
     }
 
-    private void sendToEmitters(Set<SseEmitter> emitters, NotificationResponse notification) {
+    private void scheduleRefresh(Set<SseEmitter> emitters) {
         if (emitters == null || emitters.isEmpty()) {
             return;
         }
 
         for (SseEmitter emitter : emitters) {
-            try {
-                // Only send a minimal refresh signal instead of the full payload
-                emitter.send(SseEmitter.event().name("refresh").data("NEW_NOTIFICATION"));
-            } catch (IOException e) {
-                log.debug("Failed to send refresh signal, completing emitter", e);
-                emitter.complete();
-                // We don't remove it here; the onCompletion callback handles it
-            }
+            pendingRefreshes.compute(
+                    emitter,
+                    (e, future) -> {
+                        // If a refresh is already scheduled, cancel it to reset the timer
+                        if (future != null) {
+                            future.cancel(false);
+                        }
+
+                        // Schedule a new refresh 2 seconds from now
+                        return scheduler.schedule(
+                                () -> {
+                                    pendingRefreshes.remove(e);
+
+                                    // Dispatch the actual network I/O to a virtual thread
+                                    executor.submit(
+                                            () -> {
+                                                try {
+                                                    e.send(
+                                                            SseEmitter.event()
+                                                                    .name("refresh")
+                                                                    .data("NEW_NOTIFICATION"));
+                                                } catch (IOException ex) {
+                                                    log.debug(
+                                                            "Failed to send refresh signal,"
+                                                                    + " completing emitter",
+                                                            ex);
+                                                    e.complete();
+                                                }
+                                            });
+                                },
+                                2,
+                                TimeUnit.SECONDS);
+                    });
         }
     }
 
     private void removeEmitter(SseEmitter emitter, String userId, Set<String> roles) {
+        ScheduledFuture<?> future = pendingRefreshes.remove(emitter);
+        if (future != null) {
+            future.cancel(false);
+        }
+
         globalEmitters.remove(emitter);
 
         if (userId != null && !userId.isEmpty()) {
