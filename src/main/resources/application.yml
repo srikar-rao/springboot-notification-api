@@ -86,4 +86,4 @@ app:
 # Logback config in logback-spring.xml handles appenders and formats
 logging:
   level:
-    root: WARN
+    root: INFO

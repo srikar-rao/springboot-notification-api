@@ -7,10 +7,12 @@ import com.dev.org.repository.NotificationAudienceRepository;
 import com.dev.org.repository.NotificationRepository;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RoleNotificationSaveStrategy implements NotificationSaveStrategy {
@@ -37,6 +39,7 @@ public class RoleNotificationSaveStrategy implements NotificationSaveStrategy {
 
         Cache cache = cacheManager.getCache("notifications");
         if (cache != null && targets != null) {
+            log.info("Evicting ROLE cache for notification: {} with targets: {}", saved.getId(), targets);
             targets.forEach(target -> cache.evict("ROLE_" + target));
         }
 
