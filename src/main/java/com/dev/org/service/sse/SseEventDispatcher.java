@@ -42,16 +42,13 @@ public class SseEventDispatcher {
                                         emitter.send(
                                                 SseEmitter.event().name("ping").data("keep-alive"));
                                     } catch (IOException e) {
-                                        log.debug(
-                                                "Dead connection detected during heartbeat,"
-                                                        + " removing.");
                                         emitter.complete();
                                     }
                                 });
                     }
                 },
-                15,
-                30,
+                5,
+                10,
                 TimeUnit.SECONDS);
     }
 

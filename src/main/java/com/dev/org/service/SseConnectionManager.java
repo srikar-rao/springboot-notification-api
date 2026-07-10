@@ -45,6 +45,10 @@ public class SseConnectionManager {
                 () -> {
                     dispatcher.cancelPending(emitter);
                     registry.unregister(emitter, user);
+                    log.info(
+                            "SSE connection closed for user {}. Total global connections: {}",
+                            user.getId(),
+                            registry.getGlobalEmitters().size());
                 };
 
         emitter.onCompletion(cleanup);
