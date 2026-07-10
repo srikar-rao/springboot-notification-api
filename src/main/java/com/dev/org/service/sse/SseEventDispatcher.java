@@ -42,7 +42,7 @@ public class SseEventDispatcher {
                                         emitter.send(
                                                 SseEmitter.event().name("ping").data("keep-alive"));
                                     } catch (IOException e) {
-                                        emitter.complete();
+                                        emitter.completeWithError(e);
                                     }
                                 });
                     }
@@ -81,7 +81,7 @@ public class SseEventDispatcher {
             emitter.send(SseEmitter.event().name("refresh").data("NEW_NOTIFICATION"));
         } catch (IOException ex) {
             log.debug("Failed to send refresh signal, completing emitter", ex);
-            emitter.complete();
+            emitter.completeWithError(ex);
         }
     }
 

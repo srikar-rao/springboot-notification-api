@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
@@ -99,6 +100,19 @@ public class ExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .body(problemDetail);
+    }
+
+    /**
+     * Handles normal client disconnections for async streams (SSE).
+     * Prevents log spam when a user refreshes or closes the browser tab.
+     */
+    @org.springframework.web.bind.annotation.ExceptionHandler({
+        AsyncRequestNotUsableException.class,
+        java.io.IOException.class
+    })
+    public ResponseEntity<Void> handleClientDisconnect(Exception ex) {
+        log.debug("Client disconnected: {}", ex.getMessage());
+        return ResponseEntity.noContent().build();
     }
 
     /**
