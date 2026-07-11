@@ -1,7 +1,6 @@
 package com.dev.org.service;
 
 import com.dev.org.domain.Notification;
-import com.dev.org.domain.NotificationStatus;
 import com.dev.org.domain.User;
 import com.dev.org.domain.UserNotificationState;
 import com.dev.org.mapper.NotificationMapper;
@@ -11,8 +10,6 @@ import com.dev.org.publisher.NotificationPublisher;
 import com.dev.org.repository.UserNotificationStateRepository;
 import com.dev.org.strategy.FindNotificationStrategy;
 import com.dev.org.strategy.NotificationSaveStrategy;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -38,14 +35,7 @@ public class NotificationService {
                         ? new HashSet<>()
                         : new HashSet<>(request.getTargets());
 
-        Notification notification = notificationMapper.toDomain(request);
-        notification.setStatus(NotificationStatus.ACTIVE); // For simplicity, we active immediately
-        notification.setTargets(targets);
-        Instant now = Instant.now();
-        notification.setCreatedAt(now);
-        notification.setUpdatedAt(now);
-        notification.setPublishedAt(now);
-        notification.setExpiresAt(now.plus(30, ChronoUnit.DAYS));
+        Notification notification = notificationMapper.toDomain(request, targets);
 
         Notification saved =
                 saveStrategies.stream()

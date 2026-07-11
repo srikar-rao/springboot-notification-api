@@ -1,20 +1,29 @@
 package com.dev.org.mapper;
 
 import com.dev.org.domain.Notification;
+import com.dev.org.domain.NotificationStatus;
 import com.dev.org.model.CreateNotificationRequest;
 import com.dev.org.model.NotificationResponse;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.Set;
 import org.springframework.stereotype.Component;
 
 @Component
 public class NotificationMapper {
 
     public Notification toDomain(CreateNotificationRequest request) {
+        return toDomain(request, null);
+    }
+
+    public Notification toDomain(CreateNotificationRequest request, Set<String> targets) {
         if (request == null) {
             return null;
         }
 
+        Instant now = Instant.now();
         return Notification.builder()
                 .title(request.getTitle())
                 .message(request.getMessage())
@@ -35,6 +44,12 @@ public class NotificationMapper {
                                 ? com.dev.org.domain.NotificationSeverity.valueOf(
                                         request.getSeverity().name())
                                 : com.dev.org.domain.NotificationSeverity.INFO)
+                .status(NotificationStatus.ACTIVE)
+                .targets(targets)
+                .createdAt(now)
+                .updatedAt(now)
+                .publishedAt(now)
+                .expiresAt(now.plus(30, ChronoUnit.DAYS))
                 .build();
     }
 
