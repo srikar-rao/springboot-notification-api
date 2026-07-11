@@ -63,8 +63,8 @@ components:
       properties:
         title: {type: string, example: "System Update"}
         message: {type: string, example: "System will be down for maintenance"}
-        actionUrl: {type: string, example: "https://example.com/maintenance"}
-        type: {type: string, example: "SYSTEM"}
+        actionUrl: {type: string, default: "", example: "https://example.com/maintenance"}
+        type: {type: string, default: "", example: "SYSTEM"}
         priority: {type: string, enum: [LOW, NORMAL, HIGH, CRITICAL], example: "HIGH"}
         audienceType: {type: string, enum: [USER, ROLE, GLOBAL], example: "GLOBAL"}
         severity: {type: string, enum: [INFO, FAILURE, SUCCESS], default: "INFO", example: "INFO"}

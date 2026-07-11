@@ -34,10 +34,8 @@ public class NotificationMapper {
                 .audienceType(
                         com.dev.org.domain.AudienceType.valueOf(request.getAudienceType().name()))
                 .severity(
-                        request.getSeverity() != null
-                                ? com.dev.org.domain.NotificationSeverity.valueOf(
-                                        request.getSeverity().name())
-                                : com.dev.org.domain.NotificationSeverity.INFO)
+                        com.dev.org.domain.NotificationSeverity.valueOf(
+                                request.getSeverity().name()))
                 .status(NotificationStatus.ACTIVE)
                 .targets(targets)
                 .createdAt(now)
