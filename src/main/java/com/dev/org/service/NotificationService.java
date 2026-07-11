@@ -3,6 +3,7 @@ package com.dev.org.service;
 import com.dev.org.domain.Notification;
 import com.dev.org.domain.User;
 import com.dev.org.domain.UserNotificationState;
+import com.dev.org.factory.NotificationSaveStrategyFactory;
 import com.dev.org.mapper.NotificationMapper;
 import com.dev.org.model.CreateNotificationRequest;
 import com.dev.org.model.NotificationResponse;
@@ -25,23 +26,16 @@ public class NotificationService {
 
     private final NotificationMapper notificationMapper;
     private final List<FindNotificationStrategy> findStrategies;
-    private final List<NotificationSaveStrategy> saveStrategies;
+    private final NotificationSaveStrategyFactory saveStrategyFactory;
     private final UserNotificationStateRepository stateRepository;
     private final NotificationPublisher notificationPublisher;
 
     public NotificationResponse createNotification(CreateNotificationRequest request) {
         Notification notification = notificationMapper.toDomain(request);
 
-        Notification saved =
-                saveStrategies.stream()
-                        .filter(strategy -> strategy.supports(notification.getAudienceType()))
-                        .findFirst()
-                        .map(strategy -> strategy.save(notification))
-                        .orElseThrow(
-                                () ->
-                                        new IllegalStateException(
-                                                "No save strategy found for audience type: "
-                                                        + notification.getAudienceType()));
+        NotificationSaveStrategy strategy =
+                saveStrategyFactory.getStrategy(notification.getAudienceType());
+        Notification saved = strategy.save(notification);
 
         NotificationResponse response = notificationMapper.toResponse(saved);
 
