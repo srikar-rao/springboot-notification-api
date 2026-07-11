@@ -1,8 +1,8 @@
 package com.dev.org.service;
 
 import com.dev.org.domain.AudienceType;
+import com.dev.org.domain.Notification;
 import com.dev.org.domain.User;
-import com.dev.org.model.NotificationResponse;
 import com.dev.org.strategy.SseRoutingStrategy;
 import jakarta.annotation.PostConstruct;
 import java.util.List;
@@ -66,8 +66,9 @@ public class SseConnectionManager {
         return emitter;
     }
 
-    public void broadcast(NotificationResponse notification, Set<String> targets) {
-        AudienceType type = AudienceType.valueOf(notification.getAudienceType().name());
+    public void broadcast(Notification notification) {
+        AudienceType type = notification.getAudienceType();
+        Set<String> targets = notification.getTargets();
 
         routingStrategies.stream()
                 .filter(strategy -> strategy.supports(type))

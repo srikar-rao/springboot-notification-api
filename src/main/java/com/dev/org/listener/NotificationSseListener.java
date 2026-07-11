@@ -19,6 +19,6 @@ public class NotificationSseListener {
         log.debug(
                 "Received NotificationCreatedEvent for notification: {}",
                 event.notification().getId());
-        sseConnectionManager.broadcast(event.notification(), event.targets());
+        sseConnectionManager.broadcast(event.notification());
     }
 }

@@ -40,7 +40,7 @@ public class NotificationService {
         NotificationResponse response = notificationMapper.toResponse(saved);
 
         // Publish event (Observer Pattern) to decouple SSE broadcasting
-        notificationPublisher.publishNotificationCreated(response, notification.getTargets());
+        notificationPublisher.publishNotificationCreated(saved);
 
         return response;
     }

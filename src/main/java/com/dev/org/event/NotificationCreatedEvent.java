@@ -1,6 +1,5 @@
 package com.dev.org.event;
 
-import com.dev.org.model.NotificationResponse;
-import java.util.Set;
+import com.dev.org.domain.Notification;
 
-public record NotificationCreatedEvent(NotificationResponse notification, Set<String> targets) {}
+public record NotificationCreatedEvent(Notification notification) {}
