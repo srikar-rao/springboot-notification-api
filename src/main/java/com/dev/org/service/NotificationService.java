@@ -4,10 +4,10 @@ import com.dev.org.domain.Notification;
 import com.dev.org.domain.NotificationStatus;
 import com.dev.org.domain.User;
 import com.dev.org.domain.UserNotificationState;
-import com.dev.org.event.NotificationCreatedEvent;
 import com.dev.org.mapper.NotificationMapper;
 import com.dev.org.model.CreateNotificationRequest;
 import com.dev.org.model.NotificationResponse;
+import com.dev.org.publisher.NotificationPublisher;
 import com.dev.org.repository.UserNotificationStateRepository;
 import com.dev.org.strategy.FindNotificationStrategy;
 import com.dev.org.strategy.NotificationSaveStrategy;
@@ -20,7 +20,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,7 +30,7 @@ public class NotificationService {
     private final List<FindNotificationStrategy> findStrategies;
     private final List<NotificationSaveStrategy> saveStrategies;
     private final UserNotificationStateRepository stateRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final NotificationPublisher notificationPublisher;
 
     public NotificationResponse createNotification(CreateNotificationRequest request) {
         Set<String> targets =
@@ -61,7 +60,7 @@ public class NotificationService {
         NotificationResponse response = notificationMapper.toResponse(saved);
 
         // Publish event (Observer Pattern) to decouple SSE broadcasting
-        eventPublisher.publishEvent(new NotificationCreatedEvent(response, targets));
+        notificationPublisher.publishNotificationCreated(response, targets);
 
         return response;
     }
