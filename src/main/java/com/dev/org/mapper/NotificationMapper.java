@@ -20,7 +20,10 @@ public class NotificationMapper {
             return null;
         }
 
-        Set<String> targets = new HashSet<>(request.getTargets());
+        Set<String> targets =
+                request.getTargets() != null
+                        ? new HashSet<>(request.getTargets())
+                        : new HashSet<>();
 
         Instant now = Instant.now();
         return Notification.builder()
