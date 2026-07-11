@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.Set;
 import org.springframework.stereotype.Component;
 
@@ -15,13 +16,11 @@ import org.springframework.stereotype.Component;
 public class NotificationMapper {
 
     public Notification toDomain(CreateNotificationRequest request) {
-        return toDomain(request, null);
-    }
-
-    public Notification toDomain(CreateNotificationRequest request, Set<String> targets) {
         if (request == null) {
             return null;
         }
+
+        Set<String> targets = new HashSet<>(request.getTargets());
 
         Instant now = Instant.now();
         return Notification.builder()

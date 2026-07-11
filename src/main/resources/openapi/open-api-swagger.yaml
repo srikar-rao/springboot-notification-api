@@ -68,7 +68,7 @@ components:
         priority: {type: string, enum: [LOW, NORMAL, HIGH, CRITICAL], example: "HIGH"}
         audienceType: {type: string, enum: [USER, ROLE, GLOBAL], example: "GLOBAL"}
         severity: {type: string, enum: [INFO, FAILURE, SUCCESS], default: "INFO", example: "INFO"}
-        targets: {type: array, items: {type: string}, description: "User or Role identifiers. Null/empty for GLOBAL."}
+        targets: {type: array, items: {type: string}, default: [], description: "User or Role identifiers. Empty for GLOBAL."}
 
     NotificationResponse:
       type: object

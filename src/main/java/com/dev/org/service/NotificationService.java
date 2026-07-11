@@ -30,12 +30,7 @@ public class NotificationService {
     private final NotificationPublisher notificationPublisher;
 
     public NotificationResponse createNotification(CreateNotificationRequest request) {
-        Set<String> targets =
-                request.getTargets() == null
-                        ? new HashSet<>()
-                        : new HashSet<>(request.getTargets());
-
-        Notification notification = notificationMapper.toDomain(request, targets);
+        Notification notification = notificationMapper.toDomain(request);
 
         Notification saved =
                 saveStrategies.stream()
@@ -51,7 +46,7 @@ public class NotificationService {
         NotificationResponse response = notificationMapper.toResponse(saved);
 
         // Publish event (Observer Pattern) to decouple SSE broadcasting
-        notificationPublisher.publishNotificationCreated(response, targets);
+        notificationPublisher.publishNotificationCreated(response, notification.getTargets());
 
         return response;
     }
