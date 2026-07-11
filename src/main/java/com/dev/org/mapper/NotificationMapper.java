@@ -29,15 +29,10 @@ public class NotificationMapper {
                 .actionUrl(request.getActionUrl())
                 .type(request.getType())
                 .priority(
-                        request.getPriority() != null
-                                ? com.dev.org.domain.NotificationPriority.valueOf(
-                                        request.getPriority().name())
-                                : null)
+                        com.dev.org.domain.NotificationPriority.valueOf(
+                                request.getPriority().name()))
                 .audienceType(
-                        request.getAudienceType() != null
-                                ? com.dev.org.domain.AudienceType.valueOf(
-                                        request.getAudienceType().name())
-                                : null)
+                        com.dev.org.domain.AudienceType.valueOf(request.getAudienceType().name()))
                 .severity(
                         request.getSeverity() != null
                                 ? com.dev.org.domain.NotificationSeverity.valueOf(
