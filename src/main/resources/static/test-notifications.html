@@ -372,14 +372,16 @@
                 console.log('SSE Connected:', e.data);
             });
 
-            eventSource.addEventListener('refresh', function(e) {
-                console.log('Refresh signal received via SSE:', e.data);
+            eventSource.addEventListener('notification', function(e) {
+                console.log('Notification received via SSE:', e.data);
 
-                // Show a toast or update message
-                showMessage('New notification available! Refreshing...', 'success');
-
-                // Reload the grid to fetch the latest view and states
-                loadNotifications();
+                try {
+                    const notification = JSON.parse(e.data);
+                    addNotificationToGrid(notification);
+                    showMessage('New notification received!', 'success');
+                } catch (error) {
+                    console.error('Failed to parse notification:', error);
+                }
             });
 
             eventSource.onerror = function(err) {
@@ -388,6 +390,31 @@
                 // Try to reconnect after 5 seconds
                 setTimeout(setupSSE, 5000);
             };
+        }
+
+        function addNotificationToGrid(notification) {
+            const tbody = document.getElementById('notificationsBody');
+
+            // Check if grid is empty or shows "No notifications"
+            if (tbody.innerHTML.includes('No notifications found') || tbody.innerHTML.includes('Loading...')) {
+                tbody.innerHTML = '';
+            }
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${notification.id ? notification.id.substring(0, 8) + '...' : 'N/A'}</td>
+                <td><span class="badge badge-${notification.audienceType.toLowerCase()}">${notification.audienceType}</span></td>
+                <td>${escapeHtml(notification.title)}</td>
+                <td>${escapeHtml(notification.message)}</td>
+                <td>${notification.priority || 'N/A'}</td>
+                <td>${notification.severity || 'N/A'}</td>
+                <td>${notification.status}</td>
+                <td>${notification.actionUrl ? `<a href="${escapeHtml(notification.actionUrl)}" target="_blank">Link</a>` : 'N/A'}</td>
+                <td>${formatDate(notification.createdAt)}</td>
+            `;
+
+            // Add new notification at the top
+            tbody.insertBefore(row, tbody.firstChild);
         }
 
         // Start SSE

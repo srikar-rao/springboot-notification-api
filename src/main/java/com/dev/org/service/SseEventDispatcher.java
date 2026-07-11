@@ -1,5 +1,7 @@
 package com.dev.org.service;
 
+import com.dev.org.model.NotificationResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.Set;
@@ -10,14 +12,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class SseEventDispatcher {
 
+    private final ObjectMapper objectMapper;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final ConcurrentMap<SseEmitter, ScheduledFuture<?>> pendingRefreshes =
@@ -98,6 +103,26 @@ public class SseEventDispatcher {
         ScheduledFuture<?> future = pendingRefreshes.remove(emitter);
         if (future != null) {
             future.cancel(false);
+        }
+    }
+
+    public void dispatchNotification(Set<SseEmitter> emitters, NotificationResponse notification) {
+        if (emitters == null || emitters.isEmpty()) {
+            return;
+        }
+
+        for (SseEmitter emitter : emitters) {
+            executor.submit(() -> sendNotification(emitter, notification));
+        }
+    }
+
+    private void sendNotification(SseEmitter emitter, NotificationResponse notification) {
+        try {
+            String data = objectMapper.writeValueAsString(notification);
+            emitter.send(SseEmitter.event().name("notification").data(data));
+        } catch (IOException ex) {
+            log.debug("Failed to send notification, completing emitter", ex);
+            emitter.completeWithError(ex);
         }
     }
 }

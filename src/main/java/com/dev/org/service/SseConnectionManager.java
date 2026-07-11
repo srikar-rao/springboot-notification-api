@@ -3,6 +3,7 @@ package com.dev.org.service;
 import com.dev.org.domain.AudienceType;
 import com.dev.org.domain.Notification;
 import com.dev.org.domain.User;
+import com.dev.org.model.NotificationResponse;
 import com.dev.org.strategy.SseRoutingStrategy;
 import jakarta.annotation.PostConstruct;
 import java.util.List;
@@ -66,7 +67,7 @@ public class SseConnectionManager {
         return emitter;
     }
 
-    public void broadcast(Notification notification) {
+    public void broadcast(Notification notification, NotificationResponse response) {
         AudienceType type = notification.getAudienceType();
         Set<String> targets = notification.getTargets();
 
@@ -76,7 +77,7 @@ public class SseConnectionManager {
                 .ifPresentOrElse(
                         strategy -> {
                             Set<SseEmitter> emitters = strategy.resolveEmitters(targets);
-                            dispatcher.dispatchRefresh(emitters);
+                            dispatcher.dispatchNotification(emitters, response);
                         },
                         () ->
                                 log.warn(
