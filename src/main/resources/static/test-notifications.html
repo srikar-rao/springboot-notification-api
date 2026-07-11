@@ -291,7 +291,6 @@
                     showMessage('Notification created successfully!', 'success');
                     notificationForm.reset();
                     targetsGroup.style.display = 'none';
-                    loadNotifications();
                 } else {
                     const error = await response.text();
                     showMessage('Failed to create notification: ' + error, 'error');
