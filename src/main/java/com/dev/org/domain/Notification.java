@@ -1,6 +1,7 @@
 package com.dev.org.domain;
 
 import java.time.Instant;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -34,6 +35,12 @@ public class Notification {
     private NotificationSeverity severity;
 
     private NotificationStatus status;
+
+    /**
+     * Identifiers of the targets (User IDs or Role names/IDs).
+     * For GLOBAL notifications, this should be empty/null.
+     */
+    private Set<String> targets;
 
     private Instant publishedAt;
 

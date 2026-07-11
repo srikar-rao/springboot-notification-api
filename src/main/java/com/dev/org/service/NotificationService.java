@@ -40,6 +40,7 @@ public class NotificationService {
 
         Notification notification = notificationMapper.toDomain(request);
         notification.setStatus(NotificationStatus.ACTIVE); // For simplicity, we active immediately
+        notification.setTargets(targets);
         Instant now = Instant.now();
         notification.setCreatedAt(now);
         notification.setUpdatedAt(now);
@@ -50,7 +51,7 @@ public class NotificationService {
                 saveStrategies.stream()
                         .filter(strategy -> strategy.supports(notification.getAudienceType()))
                         .findFirst()
-                        .map(strategy -> strategy.save(notification, targets))
+                        .map(strategy -> strategy.save(notification))
                         .orElseThrow(
                                 () ->
                                         new IllegalStateException(
