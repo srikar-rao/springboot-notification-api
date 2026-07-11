@@ -12,11 +12,11 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface NotificationRepository extends MongoRepository<Notification, String> {
-    List<Notification> findByAudienceType(AudienceType audienceType);
+    List<Notification> findByAudienceTypeOrderByUpdatedAtDesc(AudienceType audienceType);
 
-    List<Notification> findByAudienceTypeAndTargetsContaining(
+    List<Notification> findByAudienceTypeAndTargetsContainingOrderByUpdatedAtDesc(
             AudienceType audienceType, String target);
 
-    List<Notification> findByAudienceTypeAndTargetsIn(
+    List<Notification> findByAudienceTypeAndTargetsInOrderByUpdatedAtDesc(
             AudienceType audienceType, Set<String> targets);
 }

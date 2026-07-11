@@ -29,7 +29,8 @@ public class UserFindNotificationStrategy implements FindNotificationStrategy {
         }
 
         return notificationRepository
-                .findByAudienceTypeAndTargetsContaining(AudienceType.USER, user.getId())
+                .findByAudienceTypeAndTargetsContainingOrderByUpdatedAtDesc(
+                        AudienceType.USER, user.getId())
                 .stream()
                 .filter(n -> n.getStatus() == NotificationStatus.ACTIVE)
                 .toList();

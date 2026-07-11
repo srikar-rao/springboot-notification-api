@@ -24,7 +24,9 @@ public class GlobalFindNotificationStrategy implements FindNotificationStrategy 
     @Override
     @Cacheable(value = "notifications", key = "'GLOBAL'")
     public List<Notification> getActiveNotifications(User user) {
-        return notificationRepository.findByAudienceType(AudienceType.GLOBAL).stream()
+        return notificationRepository
+                .findByAudienceTypeOrderByUpdatedAtDesc(AudienceType.GLOBAL)
+                .stream()
                 .filter(n -> n.getStatus() == NotificationStatus.ACTIVE)
                 .toList();
     }

@@ -43,7 +43,7 @@ public class RoleFindNotificationStrategy implements FindNotificationStrategy {
     @Cacheable(value = "notifications", key = "'ROLE_' + #role")
     public List<Notification> getActiveNotificationsForRole(String role) {
         return notificationRepository
-                .findByAudienceTypeAndTargetsContaining(AudienceType.ROLE, role)
+                .findByAudienceTypeAndTargetsContainingOrderByUpdatedAtDesc(AudienceType.ROLE, role)
                 .stream()
                 .filter(n -> n.getStatus() == NotificationStatus.ACTIVE)
                 .toList();
